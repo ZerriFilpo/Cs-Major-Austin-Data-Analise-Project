@@ -184,6 +184,24 @@ def create_tables():
 
 # Função insert_team(...) recebe dados do time (nome e região) e insere na tabela team
 
+def insert_team(id, name, country):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO team (id, name, country) VALUES (?, ?, ?);", (id, name, country))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
 # Função insert_player(...) recebe  nickname, nome real, país, função, time e insere na tabela player
 
 # Função insert_coach(...) recebe  nickname, nome real, país, função, time e insere na tabela coach
