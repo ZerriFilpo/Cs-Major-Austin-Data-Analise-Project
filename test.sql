@@ -1,3 +1,4 @@
+/* Criar team*/
 CREATE TABLE IF NOT EXISTS team(
 
     id TEXT PRIMARY KEY,
@@ -7,7 +8,11 @@ CREATE TABLE IF NOT EXISTS team(
     country TEXT NOT NULL
 
     );
+    
+/* Inserir times (CHECK)*/
+INSERT INTO team (id, name, country) VALUES (?, ?, ?);
 
+/* Criar role*/
 CREATE TABLE IF NOT EXISTS role(
 
     id TEXT PRIMARY KEY,
@@ -15,7 +20,11 @@ CREATE TABLE IF NOT EXISTS role(
     name TEXT NOT NULL
 
     );
+    
+/* Inserir roles (CHECK)*/
+INSERT INTO role (id, name) VALUES (?, ?);
 
+/* Criar coach*/
 CREATE TABLE IF NOT EXISTS coach(
 
     id INTEGER PRIMARY KEY,
@@ -23,14 +32,19 @@ CREATE TABLE IF NOT EXISTS coach(
     nickname TEXT NOT NULL,
 
     full_name TEXT NOT NULL,
+    
+    country TEXT NOT NULL,
 
     role_id TEXT REFERENCES role(id),
 
     team_id TEXT REFERENCES team(id)
 
     );
+    
+/* Inserir coaches (CHECK)*/
+INSERT INTO coach (nickname, full_name, country, role_id, team_id) VALUES (?, ?, ?, ?, ?);
 
-
+/* Criar player*/
 CREATE TABLE IF NOT EXISTS player(
 
     id INTEGER PRIMARY KEY,
@@ -46,7 +60,11 @@ CREATE TABLE IF NOT EXISTS player(
     team_id TEXT REFERENCES team(id)
 
     );
+
+/* Inserir players (CHECK)*/
+INSERT INTO player (nickname, full_name, country, role_id, team_id) VALUES (?, ?, ?, ?, ?, ?);
     
+/* Criar tournament*/
 CREATE TABLE IF NOT EXISTS tournament(
 
     id TEXT  PRIMARY KEY,
@@ -63,6 +81,10 @@ CREATE TABLE IF NOT EXISTS tournament(
 
     );
 
+/* Inserir tournament (CHECK)*/
+INSERT INTO tournament (id, name, location, start_date, end_date, mvp_player_id) VALUES (?, ?, ?, ?, ?, ?);
+
+/* Criar matches*/
 CREATE TABLE IF NOT EXISTS matches(
 
     id INTEGER PRIMARY KEY,
@@ -85,6 +107,10 @@ CREATE TABLE IF NOT EXISTS matches(
 
     );
 
+/* Inserir matches (CHECK)*/
+INSERT INTO matches (tournament_id, round_des, best_of, team1_id, team2_id, winner_team_id, date, player_of_the_match) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+    
+/* Criar map*/
 CREATE TABLE IF NOT EXISTS map(
 
     id TEXT PRIMARY KEY,
@@ -93,6 +119,10 @@ CREATE TABLE IF NOT EXISTS map(
 
     );
 
+/* Inserir map (CHECK)*/
+INSERT INTO map (id, name) VALUES (?, ?);
+
+/* Criar match_map*/
 CREATE TABLE IF NOT EXISTS match_map(
 
     id INTEGER PRIMARY KEY,
@@ -121,3 +151,32 @@ CREATE TABLE IF NOT EXISTS match_map(
 
     );
 
+/* Inserir match_map (CHECK)*/
+INSERT INTO match_map (match_id, map_winner,team1_ct_rounds, team1_ct_pistol, team1_t_rounds, team1_t_pistol, team2_ct_rounds, team2_ct_pistol, team2_t_pistol, team2_t_rounds, map_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+
+/* Criar player_map_stats*/
+CREATE TABLE IF NOT EXISTS player_map_stats(
+
+    id INTEGER PRIMARY KEY,
+
+    match_map_id INTEGER REFERENCES match_map(id),
+
+    player_id INTEGER REFERENCES player(id),
+
+    kills INTEGER NOT NULL,
+
+    assists INTEGER NOT NULL,
+
+    deaths INTEGER NOT NULL,
+
+    kast INTEGER NOT NULL,
+
+    dmr INTEGER NOT,
+
+    rating REAL NOT NULL
+
+    );
+
+/* Inserir player_map_stats (CHECK)*/
+INSERT INTO player_map_stats (match_map_id, player_id, kills, assists, deaths, KAST, dmr, rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?);

@@ -65,6 +65,8 @@ def create_tables():
     nickname TEXT NOT NULL,
 
     full_name TEXT NOT NULL,
+                       
+    country TEXT NOT NULL,
 
     role_id TEXT REFERENCES role(id),
 
@@ -172,6 +174,30 @@ def create_tables():
 
     );''')
 
+    # - cira tabela player_map_stats
+
+    connection.execute('''CREATE TABLE IF NOT EXISTS player_map_stats(
+
+    id INTEGER PRIMARY KEY,
+
+    match_map_id INTEGER REFERENCES match_map(id),
+
+    player_id INTEGER REFERENCES player(id),
+
+    kills INTEGER NOT NULL,
+
+    assists INTEGER NOT NULL,
+
+    deaths INTEGER NOT NULL,
+
+    kast INTEGER NOT NULL,
+
+    dmr INTEGER NOT NULL,
+
+    rating REAL NOT NULL
+
+    );''')
+
     # - faz commit
 
     connection.commit()
@@ -179,8 +205,6 @@ def create_tables():
     # - fecha a conexão
 
     connection.close()
-
-# Função insert_tournament(...) recebe dados do torneio e insere na tabela tournament
 
 # Função insert_team(...) recebe dados do time (nome e região) e insere na tabela team
 
@@ -202,15 +226,171 @@ def insert_team(id, name, country):
 
     connection.close()
 
-# Função insert_player(...) recebe  nickname, nome real, país, função, time e insere na tabela player
+# Função insert_role(...) insere posições
+
+def insert_role(id, name):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO role (id, name) VALUES (?, ?);", (id, name))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
 
 # Função insert_coach(...) recebe  nickname, nome real, país, função, time e insere na tabela coach
 
-# Função insert_map(...) recebe nome do mapa e insere na tabela Maps    
+def insert_coach(nickname, full_name, country, role_id, team_id):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO coach (nickname, full_name, country, role_id, team_id) VALUES (?, ?, ?, ?, ?);", 
+                       (nickname, full_name, country, role_id, team_id))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
+# Função insert_player(...) recebe  nickname, nome real, país, função, time e insere na tabela player
+
+def insert_player(nickname, full_name, country, role_id, team_id):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO player (nickname, full_name, country, role_id, team_id) VALUES (?, ?, ?, ?, ?);", 
+                       (nickname, full_name, country, role_id, team_id))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
+# Função insert_tournament(...) recebe dados do torneio e insere na tabela tournament
+
+def insert_tournament(id, name, location, start_date, end_date, mvp_player_id):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO tournament (id, name, location, start_date, end_date, mvp_player_id) VALUES (?, ?, ?, ?, ?, ?);",
+                        (id, name, location, start_date, end_date, mvp_player_id))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
 
 # Função insert_match(...) recebe times que disputaram a partida, tipo da partida, vencedor, resultado e insere em match
 
+def insert_match(tournament_id, round_des, best_of, team1_id, team2_id, winner_team_id, date, player_of_the_match)  :
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO matches (tournament_id, round_des, best_of, team1_id, team2_id, winner_team_id, date, player_of_the_match) VALUES (?, ?, ?, ?, ?, ?, ?, ?);", 
+                       (tournament_id, round_des, best_of, team1_id, team2_id, winner_team_id, date, player_of_the_match))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
+# Função insert_map(...) recebe nome do mapa e insere na tabela Maps   
+
+def insert_map(id, name):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO map (id, name) VALUES (?, ?);", (id, name))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
 # Função insert_match_map(...) recebe dados de um mapa da série e insere em match_map
 
-# Função player_map_stats(...) recebe dados sobre o jogador (kills, deaths, assists, rating (kills/death), kast e dmr) em um mapa e insere em player_map_stats
+def insert_match_map(match_id, map_winner,team1_ct_rounds, team1_ct_pistol, team1_t_rounds, team1_t_pistol, 
+                       team2_ct_rounds, team2_ct_pistol, team2_t_pistol, team2_t_rounds, map_id):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("""INSERT INTO match_map (match_id, map_winner,team1_ct_rounds, team1_ct_pistol, team1_t_rounds, team1_t_pistol, 
+                       team2_ct_rounds, team2_ct_pistol, team2_t_pistol, team2_t_rounds, map_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""", 
+                       (match_id, map_winner,team1_ct_rounds, team1_ct_pistol, team1_t_rounds, team1_t_pistol, team2_ct_rounds, team2_ct_pistol, team2_t_pistol, team2_t_rounds, map_id))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
+# Função insert_player_map_stats(...) recebe dados sobre o jogador (kills, deaths, assists, rating (kills/death), kast e dmr) em um mapa e insere em player_map_stats
+
+def insert_player_map_stats(match_map_id, player_id, kills, assists, deaths, kast, dmr):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("""INSERT INTO player_map_stats (match_map_id, player_id, kills, assists, deaths, kast, dmr, rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?);""", 
+                       (match_map_id, player_id, kills, assists, deaths, kast, dmr, round((kills/deaths), 2)))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
 
