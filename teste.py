@@ -181,5 +181,9 @@ def main():
 
     print("✅ Dados de teste inseridos com sucesso!")
 
+    print(db.get_player_stats(1))
+
 if __name__ == "__main__":
     main()
+
+
