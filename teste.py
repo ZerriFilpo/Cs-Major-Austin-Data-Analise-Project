@@ -181,7 +181,7 @@ def main():
 
     print("✅ Dados de teste inseridos com sucesso!")
 
-    print(db.get_player_stats(1))
+    print(db.get_match_by_id(1))
 
 if __name__ == "__main__":
     main()

@@ -166,9 +166,9 @@ def create_tables():
 
     team2_ct_pistol INTEGER NOT NULL,   
 
-    team2_t_pistol INTEGER NOT NULL,
-
     team2_t_rounds INTEGER NOT NULL,
+
+    team2_t_pistol INTEGER NOT NULL,
 
     map_id TEXT REFERENCES map(id)
 
@@ -362,7 +362,7 @@ def insert_match_map(match_id, map_winner,team1_ct_rounds, team1_ct_pistol, team
     # - insere dados na tabela
 
     connection.execute("""INSERT INTO match_map (match_id, map_winner, team1_ct_rounds, team1_ct_pistol, team1_t_rounds, team1_t_pistol, 
-                       team2_ct_rounds, team2_ct_pistol, team2_t_pistol, team2_t_rounds, map_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""", 
+                       team2_ct_rounds, team2_ct_pistol, team2_t_rounds, team2_t_pistol, map_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""", 
                        (match_id, map_winner,team1_ct_rounds, team1_ct_pistol, team1_t_rounds, team1_t_pistol, team2_ct_rounds, team2_ct_pistol, team2_t_pistol, team2_t_rounds, map_id))
 
     # - faz commit
@@ -602,3 +602,48 @@ def get_player_stats(player_id):
 
     return rows
 
+# função get_match_by_id
+
+def get_match_by_id(match_id):
+
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # pegar jogadores por team_id
+
+    player = connection.execute("""SELECT
+
+                                        t1.name AS team1,
+                                        
+                                        t2.name AS team2,
+                                        
+                                        tw.name AS winner_team,
+
+                                        m.round_des,
+
+                                        m.best_of,
+                                            
+                                        m.date
+                                        
+                                    FROM matches m
+
+                                    JOIN team t1 ON t1.id = m.team1_id
+
+                                    JOIN team t2 ON t2.id = m.team2_id
+
+                                    JOIN team tw ON tw.id = m.winner_team_id
+
+                                    WHERE m.id = ?;""", (match_id,))
+
+    rows = player.fetchall()
+
+    # - fecha a conexão
+
+    connection.close()
+
+    return rows
+
+
+    #existe tipo especifico para date no sql e outros tipos no slide 
+    
