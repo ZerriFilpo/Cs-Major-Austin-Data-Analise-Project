@@ -442,7 +442,7 @@ def get_all_players():
 
     return rows
 
-def get_all_teams():
+def get_all_teams(tournament_id=None):
 
     # - abre uma conexão com o banco
 
@@ -450,7 +450,20 @@ def get_all_teams():
 
     # Pegar teams
 
-    teams = connection.execute("""SELECT team.* FROM team ORDER BY team.name;""")
+    if(tournament_id is None):
+
+        teams = connection.execute("""SELECT team.* FROM team ORDER BY team.name;""")
+
+    else:
+
+        teams = connection.execute("""SELECT DISTINCT
+    
+                                            t.*
+                                            
+                                        FROM matches m
+                                        JOIN tournament tor ON tor.id = m.tournament_id
+                                        JOIN team t ON t.id = m.team1_id OR t.id = m.team2_id
+                                        WHERE tor.id = ?;""", (tournament_id,))
 
     rows = teams.fetchall()
 
@@ -643,6 +656,46 @@ def get_match_by_id(match_id):
     connection.close()
 
     return rows
+
+# - função get_match_maps
+
+def get_match_maps(match_id):
+
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - pegar lista de mapas
+
+    maps = connection.execute("""SELECT
+    
+                                    tw.name,
+                                    t1.name,
+                                    mm.team1_ct_rounds,
+                                    mm.team1_ct_pistol,
+                                    mm.team1_t_rounds,
+                                    mm.team1_t_pistol,
+                                    t2.name,
+                                    mm.team2_ct_rounds,
+                                    mm.team2_ct_pistol,
+                                    mm.team2_t_rounds,
+                                    mm.team2_t_pistol,
+                                    m.name
+
+                                FROM match_map mm
+                                JOIN matches mt ON mt.id = mm.match_id
+                                JOIN map m ON m.id = mm.map_id
+                                JOIN team tw ON tw.id = mm.map_winner
+                                JOIN team t1 ON t1.id = mt.team1_id
+                                JOIN team t2 ON t2.id = mt.team2_id
+                                WHERE match_id = ?;""", (match_id,))
+
+    rows = maps.fetchall()
+
+    connection.close()
+
+    return rows
+
 
 
     #existe tipo especifico para date no sql e outros tipos no slide 
