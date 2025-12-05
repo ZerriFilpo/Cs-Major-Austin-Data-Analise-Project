@@ -56,24 +56,6 @@ def create_tables():
 
     );''')
 
-    # - cira tabela coach
-
-    connection.execute('''CREATE TABLE IF NOT EXISTS coach(
-
-    id INTEGER PRIMARY KEY,
-
-    nickname TEXT NOT NULL,
-
-    full_name TEXT NOT NULL,
-                       
-    country TEXT NOT NULL,
-
-    role_id TEXT REFERENCES role(id),
-
-    team_id TEXT REFERENCES team(id)
-
-    );''')
-
     # - cira tabela player
 
     connection.execute('''CREATE TABLE IF NOT EXISTS player(
@@ -84,11 +66,7 @@ def create_tables():
 
     full_name TEXT NOT NULL,
 
-    country TEXT NOT NULL,
-
-    role_id TEXT REFERENCES role(id),
-
-    team_id TEXT REFERENCES team(id)
+    country TEXT NOT NULL
 
     );''')
 
@@ -108,6 +86,22 @@ def create_tables():
 
     mvp_player_id INTEGER REFERENCES player(id)
 
+    );''')
+
+    # - cria tabela player_tournament
+
+    connection.execute('''CREATE TABLE IF NOT EXISTS player_tournament(
+
+    id TEXT PRIMARY KEY,
+                       
+    player_id INTEGER REFERENCES player(id),
+    
+    tournament_id TEXT REFERENCES tournament(id),
+    
+    team_id TEXT REFERENCES team(id),
+    
+    role_id TEXT REFERENCES role(id)
+    
     );''')
 
     # - cria tabela matches
@@ -130,7 +124,7 @@ def create_tables():
 
     date TEXT NOT NULL,
 
-    player_of_the_match INTEGER REFERENCES player(id)
+    player_of_the_match INTEGER REFERENCES player_tournament(id)
 
     );''')
 
@@ -182,7 +176,7 @@ def create_tables():
 
     match_map_id INTEGER REFERENCES match_map(id),
 
-    player_id INTEGER REFERENCES player(id),
+    player_id INTEGER REFERENCES player_tournament(id),
 
     kills INTEGER NOT NULL,
 
@@ -246,30 +240,9 @@ def insert_role(id, name):
 
     connection.close()
 
-# Função insert_coach(...) recebe  nickname, nome real, país, função, time e insere na tabela coach
-
-def insert_coach(nickname, full_name, country, role_id, team_id):
-    
-    # - abre uma conexão com o banco
-
-    connection = get_connection()
-
-    # - insere dados na tabela
-
-    connection.execute("INSERT INTO coach (nickname, full_name, country, role_id, team_id) VALUES (?, ?, ?, ?, ?);", 
-                       (nickname, full_name, country, role_id, team_id))
-
-    # - faz commit
-
-    connection.commit()
-
-    # - fecha a conexão
-
-    connection.close()
-
 # Função insert_player(...) recebe  nickname, nome real, país, função, time e insere na tabela player
 
-def insert_player(nickname, full_name, country, role_id, team_id):
+def insert_player(nickname, full_name, country):
     
     # - abre uma conexão com o banco
 
@@ -277,8 +250,8 @@ def insert_player(nickname, full_name, country, role_id, team_id):
 
     # - insere dados na tabela
 
-    connection.execute("INSERT INTO player (nickname, full_name, country, role_id, team_id) VALUES (?, ?, ?, ?, ?);", 
-                       (nickname, full_name, country, role_id, team_id))
+    connection.execute("INSERT INTO player (nickname, full_name, country) VALUES (?, ?, ?);", 
+                       (nickname, full_name, country))
 
     # - faz commit
 
@@ -300,6 +273,26 @@ def insert_tournament(id, name, location, start_date, end_date, mvp_player_id):
 
     connection.execute("INSERT INTO tournament (id, name, location, start_date, end_date, mvp_player_id) VALUES (?, ?, ?, ?, ?, ?);",
                         (id, name, location, start_date, end_date, mvp_player_id))
+
+    # - faz commit
+
+    connection.commit()
+
+    # - fecha a conexão
+
+    connection.close()
+
+
+def insert_player_tournament(player_id, tournament_id, team_id, role_id):
+    
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # - insere dados na tabela
+
+    connection.execute("INSERT INTO player_tournament (player_id, tournament_id, team_id, role_id) VALUES (?, ?, ?,?);", 
+                       (player_id, tournament_id, team_id, role_id))
 
     # - faz commit
 
@@ -396,7 +389,7 @@ def insert_player_map_stats(match_map_id, player_id, kills, assists, deaths, kas
 
 # Função get_all_players() retorn lista de tuples[(id, Nome, Nome do time, Role)]
 
-def get_all_players():
+def get_all_players(tournament_id=None):
 
     # - abre uma conexão com o banco
 
@@ -404,35 +397,75 @@ def get_all_players():
 
     # Pegar players
 
-    players = connection.execute("""SELECT
-                                        p.id,
-                                        
-                                        p.nickname,
-                                        
-                                        p.country,
-                                        
-                                        t.name AS team_name,
-                                        
-                                        r.name AS role_name
+    if(tournament_id is None):
 
-                                    FROM player p
-
-                                    JOIN team  t ON p.team_id = t.id
-
-                                    JOIN role r ON p.role_id = r.id
-
-                                    ORDER BY
-                                        t.name, 
-                                        
-                                        CASE 
-                                        
-                                            WHEN r.id = "igl" THEN 0
+        players = connection.execute("""SELECT
+                                            p.id,
                                             
-                                            ELSE 1
-                                        
-                                        END,
-                                        
-                                        p.nickname;""")
+                                            p.nickname,
+                                            
+                                            p.country,
+                                            
+                                            t.name AS team_name,
+                                            
+                                            r.name AS role_name
+
+                                        FROM player_tournament pt
+
+                                        JOIN player p ON p.id = pt.player_id
+
+                                        JOIN team t ON pt.team_id = t.id
+
+                                        JOIN role r ON pt.role_id = r.id
+
+                                        WHERE r.id <> 'coach'
+
+                                        ORDER BY
+                                            t.name, 
+                                            
+                                            CASE 
+                                            
+                                                WHEN r.id = "igl" THEN 0
+                                                
+                                                ELSE 1
+                                            
+                                            END,
+                                            p.nickname;""")
+        
+    else:
+
+        players = connection.execute("""SELECT
+                                            p.id,
+                                            
+                                            p.nickname,
+                                            
+                                            p.country,
+                                            
+                                            t.name AS team_name,
+                                            
+                                            r.name AS role_name
+
+                                        FROM player_tournament pt
+
+                                        JOIN player p ON p.id = pt.player_id
+
+                                        JOIN team t ON pt.team_id = t.id
+
+                                        JOIN role r ON pt.role_id = r.id
+
+                                        WHERE r.id <> 'coach' AND pt.tournament_id = ?
+
+                                        ORDER BY
+                                            t.name, 
+                                            
+                                            CASE 
+                                            
+                                                WHEN r.id = "igl" THEN 0
+                                                
+                                                ELSE 1
+                                            
+                                            END,
+                                            p.nickname;""", (tournament_id,))
 
     rows = players.fetchall()
 
@@ -456,7 +489,7 @@ def get_all_teams(tournament_id=None):
 
     else:
 
-        teams = connection.execute("""SELECT DISTINCT
+        teams = connection.execute("""SELECT DISTINCT   
     
                                             t.*
                                             
@@ -475,7 +508,7 @@ def get_all_teams(tournament_id=None):
 
 # função player por time get_team_players(team_id)
 
-def get_team_players(team_id):
+def get_team_players(team_id, tournament_id):
 
     # - abre uma conexão com o banco
 
@@ -484,18 +517,20 @@ def get_team_players(team_id):
     # pegar jogadores por team_id
 
     players = connection.execute("""SELECT
-    
+
                                         p.nickname,
                                         
                                         r.name AS role_name,
 
                                         p.country
                                         
-                                    FROM player p
+                                    FROM player_tournament pt
 
-                                    JOIN role r ON p.role_id = r.id
+                                    JOIN player p ON p.id = pt.player_id
 
-                                    WHERE p.team_id = ?
+                                    JOIN role r ON pt.role_id = r.id
+
+                                    WHERE pt.team_id = ? AND pt.tournament_id = ?
 
                                     ORDER BY 
                                         
@@ -506,7 +541,7 @@ def get_team_players(team_id):
                                             
                                         END,
                                         
-                                        p.nickname;""", (team_id,))
+                                        p.nickname;""", (team_id, tournament_id))
 
     rows = players.fetchall()
 
@@ -518,7 +553,7 @@ def get_team_players(team_id):
 
 # função player por id get_player_by_id(player_id)
 
-def get_player_by_id(player_id):
+def get_player_by_id(player_id, tournament_id=None):
 
     # - abre uma conexão com o banco
 
@@ -526,28 +561,48 @@ def get_player_by_id(player_id):
 
     # pegar jogadores por team_id
 
-    player = connection.execute("""SELECT
-    
-                                        p.id,
-                                        
-                                        p.nickname,
-                                        
-                                        p.full_name,
-                                        
-                                        p.country,
-                                        
-                                        r.name AS role_name,
-                                        
-                                        t.name AS team_name
-                                        
+    if tournament_id == None:
 
-                                    FROM player p
+        player = connection.execute("""SELECT
 
-                                    JOIN role r ON p.role_id = r.id
+                                            p.id,
+                                            
+                                            p.nickname,
+                                            
+                                            p.full_name,
+                                            
+                                            p.country
 
-                                    JOIN team t ON p.team_id = t.id
+                                        FROM player p
 
-                                    WHERE p.id = ?;""", (player_id,))
+                                        WHERE p.id = ?;""", (player_id,))
+
+    else:
+
+        player = connection.execute("""SELECT
+
+                                            p.id,
+                                            
+                                            p.nickname,
+                                            
+                                            p.full_name,
+                                            
+                                            p.country,
+                                            
+                                            r.name AS role_name,
+                                            
+                                            t.name AS team_name
+                                            
+
+                                        FROM player_tournament pt
+
+                                        JOIN player p ON p.id = pt.player_id
+
+                                        JOIN role r ON pt.role_id = r.id
+
+                                        JOIN team t ON pt.team_id = t.id
+
+                                        WHERE p.id = ? AND pt.tournament_id = ?;""", (player_id, tournament_id))
 
     rows = player.fetchall()
 
@@ -557,7 +612,7 @@ def get_player_by_id(player_id):
 
     return rows
 
-def get_player_stats(player_id):
+def get_player_stats(player_tournament_id):
 
     # - abre uma conexão com o banco
 
@@ -567,45 +622,47 @@ def get_player_stats(player_id):
 
     player = connection.execute("""SELECT
 
-                                    m.name AS map_name,
-                                    
-                                    tp.name AS player_team,
-                                    
-                                    top.name AS opponent_team,
-                                    
-                                    tw.name as winner_team,
-                                    
-                                    p.nickname,
-                                    
-                                    r.name,
-                                    
-                                    ps.kills,
-                                    
-                                    ps.assists,
-                                    
-                                    ps.deaths,
-                                    
-                                    ps.kast,
-                                    
-                                    ps.dmr,
-                                    
-                                    ps.rating
-                                    
-                                FROM player p, player_map_stats ps, match_map mm, matches mat
+                                        m.name AS map_name,
+                                        
+                                        tp.name AS player_team,
+                                        
+                                        top.name AS opponent_team,
+                                        
+                                        tw.name as winner_team,
+                                        
+                                        p.nickname,
+                                        
+                                        r.name,
+                                        
+                                        ps.kills,
+                                        
+                                        ps.assists,
+                                        
+                                        ps.deaths,
+                                        
+                                        ps.kast,
+                                        
+                                        ps.dmr,
+                                        
+                                        ps.rating
+                                        
+                                    FROM player_tournament pt, player_map_stats ps, match_map mm, matches mat
 
-                                JOIN team tp ON p.team_id = tp.id
+                                    JOIN player p ON p.id = pt.player_id
 
-                                JOIN team top ON (mat.team1_id = top.id AND mat.team1_id != p.team_id AND mat.id = mm.match_id) OR 
-                                (mat.team2_id = top.id AND mat.team2_id != p.team_id AND mat.id = mm.match_id)
+                                    JOIN team tp ON pt.team_id = tp.id
 
-                                JOIN map m ON m.id = mm.map_id AND ps.match_map_id = mm.id
+                                    JOIN team top ON (mat.team1_id = top.id AND mat.team1_id != pt.team_id AND mat.id = mm.match_id) OR 
+                                    (mat.team2_id = top.id AND mat.team2_id != pt.team_id AND mat.id = mm.match_id)
 
-                                JOIN team tw ON mat.winner_team_id = tw.id
+                                    JOIN map m ON m.id = mm.map_id AND ps.match_map_id = mm.id
 
-                                JOIN role r ON p.role_id = r.id
+                                    JOIN team tw ON mat.winner_team_id = tw.id
 
-                                WHERE p.id = ps.player_id
-                                    AND p.id = ?;""", (player_id,))
+                                    JOIN role r ON pt.role_id = r.id
+
+                                    WHERE pt.id = ps.player_id
+                                        AND pt.id = ?;""", (player_tournament_id,))
 
     rows = player.fetchall()
 
@@ -696,6 +753,40 @@ def get_match_maps(match_id):
 
     return rows
 
+def get_all_maps(tournament_id=None):
+
+    # - abre uma conexão com o banco
+
+    connection = get_connection()
+
+    # Pegar maps
+    if tournament_id == None:
+
+        maps = connection.execute("""SELECT map.name FROM map;""")
+
+    else:
+
+        maps = connection.execute("""SELECT DISTINCT
+
+                                            map.name
+
+                                        FROM match_map mm
+
+                                        JOIN map map ON map.id = mm.map_id
+
+                                        JOIN matches m ON m.id = mm.match_id
+
+                                        JOIN tournament t ON t.id = m.tournament_id
+
+                                        WHERE t.id = ?;""", (tournament_id,))
+
+    rows = maps.fetchall()
+
+    # - fecha a conexão
+
+    connection.close()
+
+    return rows
 
 
     #existe tipo especifico para date no sql e outros tipos no slide 
