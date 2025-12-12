@@ -788,6 +788,92 @@ def get_all_maps(tournament_id=None):
 
     return rows
 
+def get_player_tournament_id(player_id, tournament_id):
 
-    #existe tipo especifico para date no sql e outros tipos no slide 
+    connection = get_connection()
+
+    lista = connection.execute("""SELECT 
+    
+                                        pt.id
+                                        
+                                    FROM player p
+
+                                    JOIN player_tournament pt ON pt.player_id = p.id
+
+                                    JOIN tournament t ON t.id = pt.tournament_id
+
+                                    WHERE p.id = ? AND t.id = ?;""", (player_id, tournament_id)) 
+
+    lista = lista.fetchall()
+
+    connection.close()
+    
+    return lista[0][0]
+
+def get_all_matches(tournament_id):
+
+    connection = get_connection()
+
+    matches = connection.execute("""SELECT 
+    
+                                        m.name,
+                                        
+                                        mm.team1_ct_rounds,
+                                        
+                                        mm.team1_t_rounds,
+                                        
+                                        mm.team2_ct_rounds,
+                                        
+                                        mm.team2_t_rounds
+
+                                    FROM match_map mm
+
+                                    JOIN map m ON mm.map_id = m.id
+
+                                    JOIN matches mt ON mt.id = mm.match_id
+
+                                    JOIN tournament t ON t.id = mt.tournament_id
+
+                                    WHERE t.id = ?;""", (tournament_id,))
+    
+    rows = matches.fetchall()
+
+    connection.close()
+
+    return rows
+
+
+def all_team_matches(team_id, tournament_id):
+
+    connection = get_connection()
+
+    matches = connection.execute("""SELECT
+
+                                        m.team1_id,
+                                        
+                                        m.team2_id,
+                                        
+                                        mm.team1_ct_pistol,
+                                        
+                                        mm.team1_t_pistol,
+                                        
+                                        mm.team2_ct_pistol,
+                                        
+                                        mm.team2_t_pistol
+
+                                    FROM match_map mm
+
+                                    JOIN matches m ON m.id = mm.match_id
+
+                                    JOIN team t ON t.id = m.team1_id OR t.id = m.team2_id
+
+                                    WHERE t.id = ? AND m.tournament_id = ?;""", (team_id, tournament_id))
+
+    rows = matches.fetchall()
+
+    connection.close()
+    
+    return rows
+
+#existe tipo especifico para date no sql e outros tipos no slide 
     

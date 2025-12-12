@@ -18,6 +18,7 @@ The idea is to build a small **“offline HLTV”** focused on this event: store
   - maps played in each match
   - per-player stats per map
   - side (CT/T) performance and pistols
+  - https://dbdiagram.io/d/CS-DATA-BASE-693c28b0e877c630749eec0b
 
 - Build, in Python:
   - a database access layer (`db.py`)
@@ -66,6 +67,7 @@ A ideia é criar um mini-“HLTV offline” focado nesse torneio: armazenar todo
   - mapas jogados em cada partida
   - estatísticas por jogador em cada mapa
   - informações de lado (CT/T) e pistols
+  - https://dbdiagram.io/d/CS-DATA-BASE-693c28b0e877c630749eec0b
 
 - Construir, em Python:
   - uma camada de acesso ao banco (`db.py`)
