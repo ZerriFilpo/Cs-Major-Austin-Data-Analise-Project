@@ -1,0 +1,20 @@
+#Python
+__pycache__/
+
+#IDE
+.vscode/
+.idea/
+.env
+
+#Testes
+teste/
+stats_service_plan.md
+
+#Data Base
+*.db
+*.sqlite
+
+# PyInstaller
+dist/
+build/
+*.spec

@@ -1,10 +1,29 @@
-import db
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+import app.db.db as db
 
 from collections import defaultdict
 
 
 
 # -função get_tournament_teams()
+
+def get_all_maps():
+
+    return db.get_all_maps()
+
+def get_all_teams():
+
+    return db.get_all_teams()
+
+def get_all_players(tournament_id=None):
+
+    if tournament_id == None:
+
+        return db.get_all_players()
+    else: return db.get_all_players(tournament_id)
 
 def get_tournament_teams(tournament_id):
 
@@ -16,7 +35,83 @@ def get_team_players(team_id, tournament_id):
 
 def get_player_stats(player_tournament_id):
 
-    return db.get_player_stats(player_tournament_id)
+    stats = db.get_player_stats(player_tournament_id)
+
+    if not stats:
+
+        return None
+
+    total_kills = 0
+
+    total_assists = 0
+
+    total_deaths = 0
+
+    total_kast = 0
+
+    total_dmr = 0
+
+    total_rating = 0
+
+    max_raiting = 0
+
+    max_kills = 0
+
+    max_assists = 0
+
+    min_deaths = 9999999
+
+    max_kast = 0
+
+    max_dmr = 0
+
+    for stat in stats:
+
+        (map_, tp, top, tw, nick, role, kills,
+         assists, deaths, kast, dmr, raiting, round_des, best_of) = stat
+        
+        total_kills += kills
+
+        total_assists += assists
+
+        total_deaths += deaths
+
+        total_kast += kast
+
+        total_dmr += dmr
+
+        total_rating += raiting
+
+        if max_kills < kills:
+
+            max_kills = kills
+
+        if raiting > max_raiting:
+
+            max_raiting = raiting
+
+        if assists > max_assists: max_assists = assists
+
+        if deaths < min_deaths: min_deaths = deaths
+
+        if kast > max_kast: max_kast = kast
+
+        if dmr > max_dmr: max_dmr = dmr
+    
+
+    maps = len(stats)
+
+    res = {"avg_rating": round(total_rating/maps, 2),
+           "avg_kill": round(total_kills/maps, 1),
+           "avg_assists": round(total_assists/maps, 1),
+           "avg_deaths": round(total_deaths/maps, 1),
+           "avg_kast": round(total_kast/maps, 1),
+           "avg_dmr": round(total_dmr/maps, 1)
+           }
+    
+    best = [max_raiting, max_kills, max_assists, min_deaths, max_kast, max_dmr]
+    
+    return (stats, res, best)
 
 def get_player_best_map(player_tournament_id):
 
@@ -30,7 +125,7 @@ def get_player_best_map(player_tournament_id):
 
     for row in stats:
 
-        agrupado[row[0]].append(row[-1])
+        agrupado[row[0]].append(row[-3])
 
     avg_rating = 0
 
@@ -59,7 +154,7 @@ def get_avg_rating_map(player_tournament_id):
 
     for row in stats:
 
-        agrupado[row[0]].append(row[-1])
+        agrupado[row[0]].append(row[-3])
 
     medias = {}
 
@@ -67,7 +162,7 @@ def get_avg_rating_map(player_tournament_id):
         
         avg = sum(value)/len(value)
 
-        medias[key] = value
+        medias[key] = avg
 
     return medias
 
@@ -183,21 +278,21 @@ def top_players(tournament_id):
 
         (id, nick, country, team, role) = player
 
-        player_tournmanet_id = db.get_player_tournament_id(id, tournament_id)
+        player_tournament_id = db.get_player_tournament_id(id, tournament_id)
 
-        player_stats = db.get_player_stats(player_tournmanet_id)
+        player_stats = db.get_player_stats(player_tournament_id)
 
         raiting = 0
 
         for stats in player_stats:
 
-            raiting += stats[-1]
+            raiting += stats[-3]
 
         if player_stats:
 
             raiting = raiting/len(player_stats)
 
-            all_players_stats[player_tournmanet_id] = raiting
+            all_players_stats[player_tournament_id] = raiting
 
     s_all_players_stats = {k: v for k, v in sorted(all_players_stats.items(), key=lambda item: item[1], reverse=True)}
 
@@ -298,3 +393,15 @@ def team_pistol_rate(team_id, tournament_id):
 def get_tournament():
     
     return db.get_all_tournament()
+
+def get_team_by_id(team_id):
+
+    return db.get_team_by_id(team_id)
+
+def get_player_tournament_id(player_id, tournament_id):
+
+    return db.get_player_tournament_id(player_id, tournament_id)
+
+def get_player_by_id(player_id):
+
+    return db.get_player_by_id(player_id)[0]

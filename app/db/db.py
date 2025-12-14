@@ -404,12 +404,8 @@ def get_all_players(tournament_id=None):
                                             
                                             p.nickname,
                                             
-                                            p.country,
-                                            
-                                            t.name AS team_name,
-                                            
-                                            r.name AS role_name
-
+                                            p.country   
+                                        
                                         FROM player_tournament pt
 
                                         JOIN player p ON p.id = pt.player_id
@@ -421,16 +417,8 @@ def get_all_players(tournament_id=None):
                                         WHERE r.id <> 'coach'
 
                                         ORDER BY
-                                            t.name, 
-                                            
-                                            CASE 
-                                            
-                                                WHEN r.id = "igl" THEN 0
-                                                
-                                                ELSE 1
-                                            
-                                            END,
-                                            p.nickname;""")
+                                     
+                                            LOWER(p.nickname);""")
         
     else:
 
@@ -644,7 +632,11 @@ def get_player_stats(player_tournament_id):
                                         
                                         ps.dmr,
                                         
-                                        ps.rating
+                                        ps.rating,
+
+                                        mat.round_des,
+                                
+                                        mat.best_of
                                         
                                     FROM player_tournament pt, player_map_stats ps, match_map mm, matches mat
 
@@ -660,9 +652,11 @@ def get_player_stats(player_tournament_id):
                                     JOIN team tw ON mat.winner_team_id = tw.id
 
                                     JOIN role r ON pt.role_id = r.id
-
+                                
                                     WHERE pt.id = ps.player_id
-                                        AND pt.id = ?;""", (player_tournament_id,))
+                                        AND pt.id = ?
+                                
+                                    ORDER BY mat.id;""", (player_tournament_id,))
 
     rows = player.fetchall()
 
@@ -875,5 +869,23 @@ def all_team_matches(team_id, tournament_id):
     
     return rows
 
+def get_all_tournament():
+
+    connection = get_connection()
+
+    torneios = connection.execute("SELECT id, name FROM tournament;")
+
+    rows = torneios.fetchall()
+
+    return rows
+
+def get_team_by_id(team_id):
+
+    connection = get_connection()
+
+    torneios = connection.execute("SELECT * FROM team WHERE team.id = ?;", (team_id,))
+
+    rows = torneios.fetchall()
+
+    return rows
 #existe tipo especifico para date no sql e outros tipos no slide 
-    
